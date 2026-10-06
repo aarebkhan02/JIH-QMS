@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { ArrowRight, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Eye, EyeOff, Sun, Moon } from 'lucide-react';
 import { BrandMark } from '../components/Sidebar.jsx';
 import { Field } from '../components/Modal.jsx';
-import axios from 'axios';
-import { API_URL } from '../services/api.js';
+import { api } from '../services/api.js';
 import { setAccessToken, setRefreshToken, setUser } from '../utils/auth.js';
+import { useTheme } from '../context/ThemeContext.jsx';
 
 export default function Login({ onSuccess }) {
   const { handleSubmit, register, formState: { errors: formErrors }, setError: setFormError } = useForm();
+  const { isDark, toggleTheme } = useTheme();
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,7 +24,7 @@ export default function Login({ onSuccess }) {
         email: formData.email,
         password: formData.password
       };
-      const response = await axios.post(`${API_URL}api/v1/auth/login`, payload);
+      const response = await api.post('/api/v1/auth/login', payload);
 
       const data = response.data;
 
@@ -82,7 +83,19 @@ export default function Login({ onSuccess }) {
         <p className="text-xs text-[#9fb9ad]">JIH Qurbani Management System · 2025 season</p>
       </div>
 
-      <div className="flex items-center justify-center p-6 sm:p-10">
+      <div className="relative flex items-center justify-center p-6 sm:p-10">
+        <div className="absolute top-6 right-6">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+            title={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+            data-testid="button-login-theme-toggle"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#d8d0c0] bg-[#f0ebd9]/80 text-[#183f35] transition hover:bg-[#e6dfcb] dark:border-[#22483d] dark:bg-[#152e25] dark:text-[#edf6f2] dark:hover:bg-[#1c3c30]"
+          >
+            {isDark ? <Sun size={18} className="text-[#f5be4b]" /> : <Moon size={18} className="text-[#2b594b]" />}
+          </button>
+        </div>
         <div className="w-full max-w-md">
           <div className="mb-10 lg:hidden">
             <BrandMark />

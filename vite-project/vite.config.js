@@ -13,5 +13,16 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    proxy: {
+      '/api': {
+        target: 'https://taylor-unirritant-latina.ngrok-free.dev',
+        changeOrigin: true,
+        secure: false,
+        headers: {
+          'ngrok-skip-browser-warning': '69420',
+          'Accept': 'application/json',
+        },
+      },
+    },
   },
 });

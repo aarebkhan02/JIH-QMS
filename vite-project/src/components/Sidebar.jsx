@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   LayoutDashboard,
   Box,
@@ -7,7 +7,9 @@ import {
   ClipboardList,
   Users,
   Activity,
+  ReceiptIndianRupee,
   LogOut,
+  RefreshCw,
   Sparkles,
   ArrowRight,
   BookOpenCheck,
@@ -30,6 +32,18 @@ export function BrandMark({ light = false }) {
 }
 
 export default function Sidebar({ path, mobileNav, setMobileNav, navigate, logout }) {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   const nav = [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { label: 'Animal Inventory', href: '/inventory', aliasHref: '/animals', icon: Box },
@@ -38,6 +52,7 @@ export default function Sidebar({ path, mobileNav, setMobileNav, navigate, logou
     { label: 'Bookings', href: '/bookings', icon: ClipboardList },
     { label: 'Admin Management', href: '/admins', icon: Users },
     { label: 'Audit Logs', href: '/audit-logs', icon: Activity },
+    { label: 'Expense Tracker', href: '/expenses', icon: ReceiptIndianRupee },
   ];
 
   const current = nav.find(
@@ -50,7 +65,7 @@ export default function Sidebar({ path, mobileNav, setMobileNav, navigate, logou
   return (
     <>
       <aside
-        className={`sidebar-shell fixed inset-y-0 left-0 z-40 flex w-[272px] -translate-x-full flex-col border-r border-[#31584d] transition-transform duration-300 md:static md:translate-x-0 ${
+        className={`sidebar-shell fixed inset-y-0 left-0 z-40 flex w-[272px] -translate-x-full flex-col border-r border-[#31584d] transition-transform duration-300 md:sticky md:top-0 md:h-screen md:shrink-0 md:translate-x-0 overflow-y-auto ${
           mobileNav ? 'translate-x-0' : ''
         }`}
       >
@@ -95,10 +110,21 @@ export default function Sidebar({ path, mobileNav, setMobileNav, navigate, logou
         <div className="border-t border-[#31584d] p-4">
           <button
             data-testid="button-logout"
-            onClick={logout}
-            className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#c4d5cc] transition hover:bg-[#294f44] hover:text-white"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#c4d5cc] transition hover:bg-[#294f44] hover:text-white disabled:opacity-50"
           >
-            <LogOut size={18} /> Logout
+            {isLoggingOut ? (
+              <>
+                <RefreshCw size={18} className="animate-spin text-[#e3a84b]" />
+                <span>Signing out...</span>
+              </>
+            ) : (
+              <>
+                <LogOut size={18} />
+                <span>Logout</span>
+              </>
+            )}
           </button>
         </div>
       </aside>

@@ -90,6 +90,41 @@ export function seedData() {
     ],
     bookings,
     admins: [ADMIN],
+    expenses: [
+      {
+        expenseId: 1,
+        category: 'TRANSPORTATION',
+        description: 'Animal transit & logistics from supplier to center',
+        amount: 15000,
+        expenseDate: '2026-05-25',
+        qurbaniDayId: null,
+        createdByAdminId: 1,
+        createdAt: '2026-05-25T10:00:00.000Z',
+        updatedAt: '2026-05-25T10:00:00.000Z',
+      },
+      {
+        expenseId: 2,
+        category: 'LABOR',
+        description: 'Slaughterhouse & butchering staff team wages',
+        amount: 12000,
+        expenseDate: '2026-05-25',
+        qurbaniDayId: 1,
+        createdByAdminId: 1,
+        createdAt: '2026-05-25T11:00:00.000Z',
+        updatedAt: '2026-05-25T11:00:00.000Z',
+      },
+      {
+        expenseId: 3,
+        category: 'FEED',
+        description: 'Fodder and clean water supplies for holding pens',
+        amount: 5000,
+        expenseDate: '2026-05-25',
+        qurbaniDayId: null,
+        createdByAdminId: 1,
+        createdAt: '2026-05-25T12:00:00.000Z',
+        updatedAt: '2026-05-25T12:00:00.000Z',
+      },
+    ],
     audits: [
       { id: 'AUD-001', admin: 'Aareb', action: 'SYSTEM_SEEDED', entityType: 'SYSTEM', entityId: 'QURBANI-2025', at: '2025-05-01T08:00:00.000Z' },
       { id: 'AUD-002', admin: 'Aareb', action: 'ANIMAL_CREATED', entityType: 'ANIMAL', entityId: 'BUF-2025-01', at: '2025-05-01T08:04:00.000Z' },
@@ -106,6 +141,7 @@ export function loadInitialData() {
     const days = localStorage.getItem('qurbani_days');
     const admins = localStorage.getItem('qurbani_admins');
     const audits = localStorage.getItem('qurbani_audit_logs');
+    const expenses = localStorage.getItem('qurbani_expenses');
 
     if (animals && bookings && days && admins && audits) {
       return {
@@ -114,12 +150,15 @@ export function loadInitialData() {
         days: JSON.parse(days),
         admins: JSON.parse(admins),
         audits: JSON.parse(audits),
+        expenses: expenses ? JSON.parse(expenses) : seedData().expenses,
       };
     }
 
     const legacy = localStorage.getItem('qurbani-demo-data');
     if (legacy) {
-      return JSON.parse(legacy);
+      const parsed = JSON.parse(legacy);
+      if (!parsed.expenses) parsed.expenses = seedData().expenses;
+      return parsed;
     }
   } catch (err) {
     console.error('Failed to load from localStorage:', err);
@@ -134,6 +173,9 @@ export function persistData(data) {
     localStorage.setItem('qurbani_days', JSON.stringify(data.days));
     localStorage.setItem('qurbani_admins', JSON.stringify(data.admins));
     localStorage.setItem('qurbani_audit_logs', JSON.stringify(data.audits));
+    if (data.expenses) {
+      localStorage.setItem('qurbani_expenses', JSON.stringify(data.expenses));
+    }
     localStorage.setItem('qurbani-demo-data', JSON.stringify(data));
   } catch (err) {
     console.error('Failed to save to localStorage:', err);

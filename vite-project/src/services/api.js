@@ -6,18 +6,35 @@ import {
   clearAuth,
 } from "../utils/auth.js";
 
-export const API_URL = "https://taylor-unirritant-latina.ngrok-free.dev/";
+// In dev, use relative root ('/') so Vite proxy seamlessly handles requests without CORS
+// In production or custom env, use VITE_API_URL or ngrok remote URL
+export const API_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? '/' : 'https://ls6cx6sb-8080.inc1.devtunnels.ms');
+
+// Attach global default headers to raw axios as well as a safety measure
+axios.defaults.headers.common["ngrok-skip-browser-warning"] = "69420";
+axios.defaults.headers.common["Accept"] = "application/json";
 
 export const api = axios.create({
   baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
+    "Accept": "application/json",
+    "ngrok-skip-browser-warning": "69420",
   },
 });
 
-// Add access token to every request
+
+// Add access token and ngrok bypass to every request
 api.interceptors.request.use((config) => {
   const token = getAccessToken();
+
+  config.headers = config.headers || {};
+  config.headers["ngrok-skip-browser-warning"] = "69420";
+  if (!config.headers["Accept"]) {
+    config.headers["Accept"] = "application/json";
+  }
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -33,7 +50,12 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status !== 401 || originalRequest._retry) {
+    if (
+      error.response?.status !== 401 ||
+      originalRequest._retry ||
+      originalRequest.url?.includes('/auth/logout') ||
+      originalRequest.url?.includes('/auth/refresh')
+    ) {
       return Promise.reject(error);
     }
 
@@ -44,32 +66,45 @@ api.interceptors.response.use(
     if (!refreshToken) {
       clearAuth();
       window.location.href = "/login";
-      return;
+      return Promise.reject(error);
     }
 
     try {
+      const refreshUrl = `${API_URL.endsWith('/') ? API_URL : `${API_URL}/`}api/v1/auth/refresh`;
       const response = await axios.post(
-        `${API_URL}api/v1/auth/refresh`,
+        refreshUrl,
         {
           refreshToken: refreshToken,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "ngrok-skip-browser-warning": "69420",
+          },
         }
       );
 
-      const newAccessToken = response.data.data.accessToken;
+      const newAccessToken = response.data?.data?.accessToken;
+
+      if (!newAccessToken) {
+        throw new Error("No access token returned");
+      }
 
       // Save new access token
       setAccessToken(newAccessToken);
 
       // Retry original request
-      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+      originalRequest.headers = originalRequest.headers || {};
+      originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+      originalRequest.headers["ngrok-skip-browser-warning"] = "69420";
 
       return api(originalRequest);
 
-    } catch (error) {
+    } catch (refreshErr) {
       clearAuth();
       window.location.href = "/login";
-
-      return Promise.reject(error);
+      return Promise.reject(refreshErr);
     }
   }
 );

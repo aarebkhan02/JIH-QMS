@@ -13,9 +13,11 @@ import HissaBooking from './pages/HissaBooking.jsx';
 import Bookings from './pages/Bookings.jsx';
 import AdminManagement from './pages/AdminManagement.jsx';
 import AuditLogs from './pages/AuditLogs.jsx';
+import ExpenseTracker from './pages/ExpenseTracker.jsx';
 
 import { loadInitialData, persistData } from './data/mockData.js';
 import { getAccessToken, clearAuth } from './utils/auth.js';
+import { logoutUser } from './services/authApi.js';
 
 function Toast({ message, type, onClose }) {
   return (
@@ -82,11 +84,16 @@ function AppContent() {
   const patchData = (updater) =>
     setData((current) => (typeof updater === 'function' ? updater(current) : updater));
 
-  const logout = () => {
-    clearAuth();
-    setLoggedIn(false);
-    navigate('/login');
-    notify('You have been signed out.', 'info');
+  const logout = async () => {
+    try {
+      const msg = await logoutUser();
+      notify(msg || 'You have been signed out.', 'info');
+    } catch (err) {
+      notify('You have been signed out.', 'info');
+    } finally {
+      setLoggedIn(false);
+      navigate('/login');
+    }
   };
 
   if (!loggedIn || location === '/login') {
@@ -116,6 +123,7 @@ function AppContent() {
     if (path === '/bookings' || path.startsWith('/bookings/')) return 'Bookings';
     if (path === '/admins') return 'Admin Management';
     if (path === '/audit-logs') return 'Audit Logs';
+    if (path === '/expenses') return 'Expense Tracker';
     return 'Workspace';
   };
 
@@ -130,20 +138,21 @@ function AppContent() {
           logout={logout}
         />
         <main className="min-w-0 flex-1">
-          <Header currentLabel={getPageTitle(page)} setMobileNav={setMobileNav} />
+          <Header currentLabel={getPageTitle(page)} setMobileNav={setMobileNav} logout={logout} />
           <div className="page-enter mx-auto max-w-[1500px] p-4 sm:p-6 lg:p-10">
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard data={data} navigate={navigate} />} />
+              <Route path="/dashboard" element={<Dashboard data={data} navigate={navigate} notify={notify} />} />
               <Route path="/inventory" element={<AnimalInventory data={data} patchData={patchData} notify={notify} />} />
               <Route path="/animals" element={<Navigate to="/inventory" replace />} />
               <Route path="/qurbani-days" element={<QurbaniDays data={data} patchData={patchData} notify={notify} />} />
               <Route path="/new-booking" element={<HissaBooking data={data} patchData={patchData} notify={notify} navigate={navigate} />} />
               <Route path="/hissa-booking" element={<Navigate to="/new-booking" replace />} />
-              <Route path="/bookings" element={<Bookings data={data} navigate={navigate} />} />
-              <Route path="/bookings/:id" element={<Bookings data={data} navigate={navigate} selectedId={location.split('/')[2]} />} />
+              <Route path="/bookings" element={<Bookings data={data} patchData={patchData} notify={notify} navigate={navigate} />} />
+              <Route path="/bookings/:id" element={<Bookings data={data} patchData={patchData} notify={notify} navigate={navigate} selectedId={location.split('/')[2]} />} />
               <Route path="/admins" element={<AdminManagement data={data} patchData={patchData} notify={notify} />} />
               <Route path="/audit-logs" element={<AuditLogs data={data} />} />
+              <Route path="/expenses" element={<ExpenseTracker data={data} patchData={patchData} notify={notify} />} />
               <Route path="*" element={<PageNotFound navigate={navigate} />} />
             </Routes>
           </div>

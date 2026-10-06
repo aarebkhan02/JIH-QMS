@@ -4,9 +4,7 @@ import { PageIntro } from './Dashboard.jsx';
 import Modal, { ModalActions, Field } from '../components/Modal.jsx';
 import { TableScroll, Th, Td, IconButton } from '../components/Table.jsx';
 import { formatShortDate, formatDateTime } from '../data/mockData.js';
-import axios from 'axios';
-import { API_URL } from '../services/api.js';
-import { getAccessToken } from '../utils/auth.js';
+import { api } from '../services/api.js';
 
 export function AdminModal({ admin, onClose, onSave, apiError, fieldErrors, isSaving }) {
   const [form, setForm] = useState({
@@ -97,12 +95,7 @@ export function AdminView({ adminId, onClose, notify }) {
   useEffect(() => {
     const fetchAdmin = async () => {
       try {
-        const token = getAccessToken();
-        const headers = { 
-          Authorization: `Bearer ${token}`,
-          'ngrok-skip-browser-warning': 'true'
-        };
-        const res = await axios.get(`${API_URL}api/v1/admins/${adminId}`, { headers });
+        const res = await api.get(`/api/v1/admins/${adminId}`);
         if (res.data?.success) {
           setAdmin(res.data.data);
         }
@@ -159,11 +152,7 @@ export default function AdminManagement({ notify }) {
   const fetchAdmins = async () => {
     try {
       setIsLoading(true);
-      const token = getAccessToken();
-      const headers = { 
-        Authorization: `Bearer ${token}`
-      };
-      const res = await axios.get(`${API_URL}api/v1/admins`, { headers });
+      const res = await api.get('/api/v1/admins');
       if (res.data?.success) {
         setAdmins(res.data.data || []);
       }
@@ -193,16 +182,11 @@ export default function AdminManagement({ notify }) {
     }
 
     try {
-      const token = getAccessToken();
-      const headers = { 
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
       let res;
       if (existing) {
-        res = await axios.put(`${API_URL}api/v1/admins/${existing.userId}`, payload, { headers });
+        res = await api.put(`/api/v1/admins/${existing.userId}`, payload);
       } else {
-        res = await axios.post(`${API_URL}api/v1/admins`, payload, { headers });
+        res = await api.post('/api/v1/admins', payload);
       }
 
       if (res.status === 200 || res.status === 201 || res.data?.success) {
