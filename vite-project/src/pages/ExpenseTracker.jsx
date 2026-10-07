@@ -46,10 +46,20 @@ function getCategoryBadgeClass(category) {
       return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-900';
     case 'FEED':
       return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-900';
+    case 'SLAUGHTER':
+      return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-900';
+    case 'PACKAGING':
+      return 'bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/50 dark:text-pink-300 dark:border-pink-900';
+    case 'EQUIPMENT':
+      return 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-900';
     case 'CLEANING':
       return 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-900';
+    case 'RENT':
+      return 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-950/50 dark:text-slate-300 dark:border-slate-900';
     case 'UTILITIES':
       return 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-900';
+    case 'OTHER':
+      return 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-950/50 dark:text-gray-300 dark:border-gray-900';
     default:
       return 'bg-[#f4efe4] text-[#41685a] border-[#ded7c8] dark:bg-[#18362b] dark:text-[#9bc2b1] dark:border-[#285745]';
   }
@@ -135,7 +145,7 @@ function ExpenseFormModal({
             >
               {EXPENSE_CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>
-                  {cat.label} ({cat.value})
+                  {cat.label}
                 </option>
               ))}
             </select>
