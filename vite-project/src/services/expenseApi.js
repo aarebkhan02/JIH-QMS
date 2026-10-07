@@ -12,10 +12,15 @@ import { api } from './api.js';
 
 export const EXPENSE_CATEGORIES = [
   { value: 'TRANSPORTATION', label: 'Transportation', color: 'blue' },
-  { value: 'LABOR', label: 'Labor & Slaughter', color: 'orange' },
-  { value: 'FEED', label: 'Feed & Fodder', color: 'green' },
-  { value: 'CLEANING', label: 'Cleaning & Sanitation', color: 'teal' },
-  { value: 'UTILITIES', label: 'Utilities & Logistics', color: 'gold' },
+  { value: 'LABOR', label: 'Labor', color: 'orange' },
+  { value: 'FEED', label: 'Feed', color: 'green' },
+  { value: 'SLAUGHTER', label: 'Slaughter', color: 'red' },
+  { value: 'PACKAGING', label: 'Packaging', color: 'pink' },
+  { value: 'EQUIPMENT', label: 'Equipment', color: 'indigo' },
+  { value: 'CLEANING', label: 'Cleaning', color: 'teal' },
+  { value: 'RENT', label: 'Rent', color: 'slate' },
+  { value: 'UTILITIES', label: 'Utilities', color: 'purple' },
+  { value: 'OTHER', label: 'Other', color: 'gray' },
 ];
 
 /**
