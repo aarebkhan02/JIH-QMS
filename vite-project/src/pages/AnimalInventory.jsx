@@ -183,7 +183,7 @@ export function InventoryTable({ items, isLoading, onEdit, onView, onAddStock, o
 }
 
 // Add Stock Modal Component (API 12: POST /api/v1/animals/:id/add-stock)
-export function AddStockModal({ item, onClose, onSave, apiError, isSaving }) {
+export function AddStockModal({ item, onClose, onSave, onEditBatch, apiError, isSaving }) {
   const [form, setForm] = useState({
     quantity: '',
     price: '',
@@ -290,6 +290,17 @@ export function AddStockModal({ item, onClose, onSave, apiError, isSaving }) {
           </div>
         </div>
 
+        {onEditBatch && (
+          <button
+            type="button"
+            onClick={() => onEditBatch(item)}
+            disabled={isSaving}
+            className="mt-4 text-xs font-bold text-[#246b59] hover:underline disabled:opacity-50 dark:text-[#4ade80]"
+          >
+            Edit existing batch details instead
+          </button>
+        )}
+
         <ModalActions
           onClose={onClose}
           submitLabel={isSaving ? 'Adding Stock...' : `Confirm +${qty || 0} Animals`}
@@ -301,7 +312,15 @@ export function AddStockModal({ item, onClose, onSave, apiError, isSaving }) {
 }
 
 // Add/Edit Modal Component
-export function InventoryModal({ item, onClose, onSave, apiError, isSaving }) {
+export function InventoryModal({
+  item,
+  onClose,
+  onSave,
+  onAddStock,
+  duplicateBatch,
+  apiError,
+  isSaving,
+}) {
   const [form, setForm] = useState({
     batchYear: item?.batchYear ?? new Date().getFullYear(),
     totalAnimals: item?.totalAnimals ?? '',
@@ -329,7 +348,20 @@ export function InventoryModal({ item, onClose, onSave, apiError, isSaving }) {
       >
         {apiError && (
           <div className="mb-4 rounded-xl border border-[#efb7ae] bg-[#fff3f0] p-3 text-sm text-[#a63f32] dark:border-[#5d2520] dark:bg-[#331614] dark:text-[#fca5a5]">
-            {apiError}
+            <p>{apiError}</p>
+            {duplicateBatch && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  data-testid="button-duplicate-add-stock"
+                  onClick={() => onAddStock(duplicateBatch)}
+                  className="btn-primary flex items-center gap-1.5 text-xs"
+                >
+                  <PlusCircle size={14} />
+                  Add Stock to Existing Batch
+                </button>
+              </div>
+            )}
           </div>
         )}
         <div className="grid gap-4 sm:grid-cols-2">
@@ -553,6 +585,7 @@ export default function AnimalInventory({ data, patchData, notify }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [apiError, setApiError] = useState(null);
+  const [duplicateBatch, setDuplicateBatch] = useState(null);
 
   // Filters
   const [typeFilter, setTypeFilter] = useState('All Types');
@@ -657,6 +690,7 @@ export default function AnimalInventory({ data, patchData, notify }) {
   // Handle Save (Create / Update)
   const save = async (form, existing) => {
     setApiError(null);
+    setDuplicateBatch(null);
     setIsSaving(true);
 
     const animals = Number(form.totalAnimals);
@@ -746,6 +780,39 @@ export default function AnimalInventory({ data, patchData, notify }) {
         existing ? 'Failed to update animal batch.' : 'Failed to add animal batch.'
       );
       setApiError(errorMsg);
+      const isDuplicate =
+        !existing &&
+        (err.response?.status === 409 ||
+          /already exists|duplicate/i.test(errorMsg));
+      if (isDuplicate) {
+        try {
+          const response = await api.get('/api/v1/animals', {
+            params: { animalType: cleanedType, batchYear: Number(form.batchYear) },
+          });
+          const rawData = response.data?.data;
+          const matches = Array.isArray(rawData)
+            ? rawData
+            : Array.isArray(rawData?.content)
+            ? rawData.content
+            : Array.isArray(response.data)
+            ? response.data
+            : [];
+          const matchingBatch = matches.find(
+            (animal) =>
+              String(animal.animalType || animal.animal || '').trim().toLowerCase() ===
+                cleanedType.toLowerCase() &&
+              Number(animal.batchYear) === Number(form.batchYear)
+          );
+          if (matchingBatch) {
+            setDuplicateBatch(matchingBatch);
+          } else {
+            console.warn('Duplicate batch exists but could not be found in the filtered inventory response.');
+          }
+        } catch (lookupError) {
+          console.error('Failed to find the existing duplicate animal batch:', lookupError);
+          notify?.('Could not load the existing batch. Refresh inventory and try again.', 'error');
+        }
+      }
       notify?.(errorMsg, 'error');
     } finally {
       setIsSaving(false);
@@ -847,7 +914,8 @@ export default function AnimalInventory({ data, patchData, notify }) {
                   } batch${filtered.length === 1 ? '' : 'es'}`}
             </h3>
           </div>
-          <div>
+          <div className="flex flex-wrap items-center gap-3">
+          
             <span className="inline-flex items-center gap-1.5 rounded-full bg-[#e5f0e8] px-3.5 py-1.5 text-xs font-bold text-[#246b59] dark:bg-[#18382d] dark:text-[#4ade80]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#246b59] dark:bg-[#4ade80]" />
               {isLoading ? '...' : `${formatNumber(totalAvailableHissa)} Hissa available`}
@@ -943,6 +1011,12 @@ export default function AnimalInventory({ data, patchData, notify }) {
           item={modal.item}
           onClose={() => setModal(null)}
           onSave={save}
+          onAddStock={(batch) => {
+            setApiError(null);
+            setDuplicateBatch(null);
+            setModal({ type: 'add-stock', item: batch });
+          }}
+          duplicateBatch={duplicateBatch}
           apiError={apiError}
           isSaving={isSaving}
         />
@@ -953,6 +1027,10 @@ export default function AnimalInventory({ data, patchData, notify }) {
           item={modal.item}
           onClose={() => setModal(null)}
           onSave={handleAddStock}
+          onEditBatch={(batch) => {
+            setApiError(null);
+            setModal({ type: 'edit', item: batch });
+          }}
           apiError={apiError}
           isSaving={isSaving}
         />
