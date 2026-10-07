@@ -12,14 +12,14 @@ import {
   RefreshCw,
   Sparkles,
   ArrowRight,
-  BookOpenCheck,
 } from 'lucide-react';
+import JihLogo from './JihLogo.jsx';
 
 export function BrandMark({ light = false }) {
   return (
     <div className={`flex items-center gap-3 ${light ? 'text-[#faf5e9]' : 'text-[#183f35]'}`}>
-      <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#e3a84b] text-[#183f35] shadow-sm">
-        <BookOpenCheck size={22} />
+      <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#e3a84b] text-white shadow-sm p-1.5 overflow-hidden transition-transform duration-200 hover:scale-105">
+        <JihLogo className="h-full w-auto text-white" />
       </div>
       <div>
         <div className="font-display text-lg font-extrabold leading-none tracking-[-.04em]">JIH Qurbani</div>
