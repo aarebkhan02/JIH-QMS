@@ -13,8 +13,45 @@ export function AdminModal({ admin, onClose, onSave, apiError, fieldErrors, isSa
     phoneNumber: admin?.phoneNumber || '',
     password: '',
   });
+  const [phoneError, setPhoneError] = useState('');
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+
+  const handlePhoneChange = (e) => {
+    // Only accept numeric digits (0-9) - strip any alphabets or non-numeric characters
+    const numericOnly = e.target.value.replace(/\D/g, '');
+    setPhoneError('');
+    set('phoneNumber', numericOnly);
+  };
+
+  const handlePhoneKeyDown = (e) => {
+    // Allow navigational and control keys
+    if (
+      ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key) ||
+      e.ctrlKey ||
+      e.metaKey
+    ) {
+      return;
+    }
+    // Block any key that is not a number (0-9)
+    if (!/^[0-9]$/.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!form.phoneNumber || !/^\d+$/.test(form.phoneNumber)) {
+      setPhoneError('Phone number must contain only numbers.');
+      return;
+    }
+    if (form.phoneNumber.length < 10) {
+      setPhoneError('Phone number must be at least 10 digits.');
+      return;
+    }
+    setPhoneError('');
+    onSave(form, admin);
+  };
 
   return (
     <Modal
@@ -23,10 +60,7 @@ export function AdminModal({ admin, onClose, onSave, apiError, fieldErrors, isSa
       onClose={onClose}
     >
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          onSave(form, admin);
-        }}
+        onSubmit={handleSubmit}
         className="space-y-4"
       >
         {apiError && (
@@ -75,12 +109,22 @@ export function AdminModal({ admin, onClose, onSave, apiError, fieldErrors, isSa
           <input
             data-testid="input-admin-phone"
             className="input"
+            type="tel"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={15}
+            placeholder="e.g. 9876543210"
             value={form.phoneNumber}
-            onChange={(e) => set('phoneNumber', e.target.value)}
+            onKeyDown={handlePhoneKeyDown}
+            onChange={handlePhoneChange}
             required
             disabled={isSaving}
           />
-          {fieldErrors?.phoneNumber && <p className="mt-1 text-sm text-[#a63f32]">{fieldErrors.phoneNumber}</p>}
+          {(phoneError || fieldErrors?.phoneNumber) && (
+            <p className="mt-1 text-sm text-[#a63f32]">
+              {phoneError || fieldErrors?.phoneNumber}
+            </p>
+          )}
         </Field>
         <ModalActions onClose={onClose} submitLabel={isSaving ? 'Saving...' : (admin ? 'Save changes' : 'Add admin')} />
       </form>
@@ -346,4 +390,3 @@ export default function AdminManagement({ notify }) {
     </div>
   );
 }
-
