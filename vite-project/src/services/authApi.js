@@ -31,3 +31,31 @@ export async function logoutUser() {
 
   return message;
 }
+
+/**
+ * Calls backend POST /api/v1/auth/forgot-password
+ * Request payload: { email: string }
+ *
+ * @param {string} email
+ * @returns {Promise<any>}
+ */
+export async function requestPasswordReset(email) {
+  const response = await api.post('/api/v1/auth/forgot-password', { email });
+  return response.data;
+}
+
+/**
+ * Calls backend POST /api/v1/auth/reset-password
+ * Request payload: { token: string, newPassword: string, confirmPassword: string }
+ *
+ * @param {{ token: string, newPassword: string, confirmPassword: string }} payload
+ * @returns {Promise<any>}
+ */
+export async function resetPassword({ token, newPassword, confirmPassword }) {
+  const response = await api.post('/api/v1/auth/reset-password', {
+    token,
+    newPassword,
+    confirmPassword,
+  });
+  return response.data;
+}

@@ -512,7 +512,11 @@ export default function AuditLogs({ data }) {
         queryParams.entityType = entityFilter;
       }
       if (actionFilter !== 'All') {
-        queryParams.action = actionFilter;
+        let actionVal = actionFilter;
+        if (actionVal === 'BOOKING_CREATED') actionVal = 'HISSA_BOOKING_CREATED';
+        if (actionVal === 'BOOKING_UPDATED') actionVal = 'HISSA_BOOKING_UPDATED';
+        if (actionVal === 'BOOKING_DELETED') actionVal = 'HISSA_BOOKING_DELETED';
+        queryParams.action = actionVal;
       }
       if (adminFilter !== 'All') {
         const adminMatch = adminFilter.match(/\d+/);
@@ -578,8 +582,9 @@ export default function AuditLogs({ data }) {
       'ANIMAL_STOCK_ADDED',
       'ANIMAL_CREATED',
       'ANIMAL_UPDATED',
-      'BOOKING_CREATED',
-      'BOOKING_UPDATED',
+      'HISSA_BOOKING_CREATED',
+      'HISSA_BOOKING_UPDATED',
+      'HISSA_BOOKING_DELETED',
       'ADMIN_CREATED',
       'ADMIN_UPDATED',
       'EXPENSE_CREATED',

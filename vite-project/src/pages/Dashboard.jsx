@@ -634,7 +634,7 @@ export default function Dashboard({ data, navigate, notify }) {
               <div className="rounded-xl border border-[#246b59]/20 bg-[#e4efe7]/40 dark:bg-[#193a2f]/40 p-3.5">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-[#246b59] dark:text-[#4ade80]">
                   <CheckCircle2 size={14} />
-                  <span>Meat Wanted</span>
+                  <span>Takeaway</span>
                 </div>
                 <p className="mt-1 text-2xl font-black text-[#183f35] dark:text-[#edf6f2]">
                   {formatNumber(meatWantedCount)}

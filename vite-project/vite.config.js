@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 
+const PROD_API_URL = 'https://jih-api.ethicalint.com';
+const DEVTUNNEL_API_URL = 'https://ls6cx6sb-8080.inc1.devtunnels.ms';
+
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
@@ -15,7 +18,7 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'https://taylor-unirritant-latina.ngrok-free.dev',
+        target: DEVTUNNEL_API_URL, // Switch to PROD_API_URL when needed
         changeOrigin: true,
         secure: false,
         headers: {

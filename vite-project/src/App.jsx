@@ -6,6 +6,8 @@ import Sidebar from './components/Sidebar.jsx';
 import Header from './components/Header.jsx';
 
 import Login from './pages/Login.jsx';
+import ForgotPassword from './pages/ForgotPassword.jsx';
+import ResetPassword from './pages/ResetPassword.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import AnimalInventory from './pages/AnimalInventory.jsx';
 import QurbaniDays from './pages/QurbaniDays.jsx';
@@ -96,15 +98,24 @@ function AppContent() {
     }
   };
 
-  if (!loggedIn || location === '/login') {
-    if (loggedIn && location === '/login') {
+  const isAuthRoute = location === '/login' || location === '/forgot-password' || location === '/reset-password';
+
+  if (!loggedIn || isAuthRoute) {
+    if (loggedIn && isAuthRoute) {
       return <Navigate to="/dashboard" replace />;
     }
-    if (!loggedIn && location !== '/login') {
+    if (!loggedIn && !isAuthRoute) {
       return <Navigate to="/login" replace />;
+    }
+    if (location === '/forgot-password') {
+      return <ForgotPassword navigate={navigate} notify={notify} />;
+    }
+    if (location === '/reset-password') {
+      return <ResetPassword navigate={navigate} notify={notify} />;
     }
     return (
       <Login
+        navigate={navigate}
         onSuccess={() => {
           setLoggedIn(true);
           navigate('/dashboard');

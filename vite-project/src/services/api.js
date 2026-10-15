@@ -6,25 +6,44 @@ import {
   clearAuth,
 } from "../utils/auth.js";
 
-// In dev, use relative root ('/') so Vite proxy seamlessly handles requests without CORS
-// In production or custom env, use VITE_API_URL or ngrok remote URL
-export const API_URL =
-  import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? '/' : 'https://ls6cx6sb-8080.inc1.devtunnels.ms');
+const ENV = {
+  dev: {
+    // BASE_URL: ' https://ls6cx6sb-8080.inc1.devtunnels.ms/', // devtunnel
+    BASE_URL: 'https://taylor-unirritant-latina.ngrok-free.dev', // ngrok
+  },
+  staging: {
+    BASE_URL: 'https://jih-api.ethicalint.com',
+  },
+  prod: {
+    BASE_URL: 'https://jih-api.ethicalint.com',
+  },
+};
+
+const getEnvVars = (env = 'dev') => {
+  if (!ENV[env]) {
+    throw new Error(`Unknown environment: ${env}`);
+  }
+  return ENV[env];
+};
+
+const currentEnv = getEnvVars(); // Sirf upar getEnvVars(env = '...') me change karein
+export const BASE_URL = currentEnv.BASE_URL || ENV.prod.BASE_URL;
+export const API_URL = BASE_URL;
+export const PROD_API_URL = ENV.prod.BASE_URL;
+export const DEVTUNNEL_API_URL = ENV.dev.BASE_URL;
 
 // Attach global default headers to raw axios as well as a safety measure
 axios.defaults.headers.common["ngrok-skip-browser-warning"] = "69420";
 axios.defaults.headers.common["Accept"] = "application/json";
 
 export const api = axios.create({
-  baseURL: API_URL,
+  baseURL: BASE_URL,
   headers: {
     "Content-Type": "application/json",
     "Accept": "application/json",
     "ngrok-skip-browser-warning": "69420",
   },
 });
-
 
 // Add access token and ngrok bypass to every request
 api.interceptors.request.use((config) => {
@@ -51,8 +70,10 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     if (
+      !originalRequest ||
       error.response?.status !== 401 ||
       originalRequest._retry ||
+      originalRequest.url?.includes('/auth/login') ||
       originalRequest.url?.includes('/auth/logout') ||
       originalRequest.url?.includes('/auth/refresh')
     ) {
@@ -65,12 +86,14 @@ api.interceptors.response.use(
 
     if (!refreshToken) {
       clearAuth();
-      window.location.href = "/login";
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.href = "/login";
+      }
       return Promise.reject(error);
     }
 
     try {
-      const refreshUrl = `${API_URL.endsWith('/') ? API_URL : `${API_URL}/`}api/v1/auth/refresh`;
+      const refreshUrl = `${BASE_URL.endsWith('/') ? BASE_URL : `${BASE_URL}/`}api/v1/auth/refresh`;
       const response = await axios.post(
         refreshUrl,
         {
@@ -87,6 +110,7 @@ api.interceptors.response.use(
 
       const newAccessToken = response.data?.data?.accessToken;
 
+    
       if (!newAccessToken) {
         throw new Error("No access token returned");
       }
@@ -103,8 +127,13 @@ api.interceptors.response.use(
 
     } catch (refreshErr) {
       clearAuth();
-      window.location.href = "/login";
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.href = "/login";
+      }
       return Promise.reject(refreshErr);
     }
   }
 );
+
+export { ENV, getEnvVars };
+export default getEnvVars;

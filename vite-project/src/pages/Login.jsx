@@ -7,7 +7,7 @@ import { api } from '../services/api.js';
 import { setAccessToken, setRefreshToken, setUser } from '../utils/auth.js';
 import { useTheme } from '../context/ThemeContext.jsx';
 
-export default function Login({ onSuccess }) {
+export default function Login({ onSuccess, navigate }) {
   const { handleSubmit, register, formState: { errors: formErrors }, setError: setFormError } = useForm();
   const { isDark, toggleTheme } = useTheme();
 
@@ -37,9 +37,10 @@ export default function Login({ onSuccess }) {
         setError(data.message || 'Invalid email or password');
       }
     } catch (err) {
+      console.error('Login request failed:', err);
       if (err.response) {
         const data = err.response.data;
-        if (err.response.status === 400 && data.data && typeof data.data === 'object') {
+        if (err.response.status === 400 && data?.data && typeof data.data === 'object') {
           Object.keys(data.data).forEach((key) => {
             setFormError(key, { type: 'server', message: data.data[key] });
           });
@@ -49,10 +50,13 @@ export default function Login({ onSuccess }) {
             setError(data.message);
           }
         } else {
-          setError(data.message || 'Invalid email or password');
+          const serverMsg = (data && typeof data === 'object')
+            ? (data.message || data.error || data.detail)
+            : (typeof data === 'string' && data ? data : null);
+          setError(serverMsg || 'Invalid email or password');
         }
       } else {
-        setError('Unable to connect to the server. Please try again.');
+        setError(err.message || 'Unable to connect to the server. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -126,29 +130,40 @@ export default function Login({ onSuccess }) {
               )}
             </Field>
             <div className="mt-4">
-              <Field label="Password">
-                <div className="relative">
-                  <input
-                    data-testid="input-password"
-                    type={showPassword ? "text" : "password"}
-                    {...register('password', { required: 'Password is required' })}
-                    className="input pr-10"
-                    placeholder="••••••••"
-                    disabled={loading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8a948e] hover:text-[#183f35]"
-                    disabled={loading}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-                {formErrors.password && (
-                  <div className="mt-1 text-sm text-[#a63f32]">{formErrors.password.message}</div>
-                )}
-              </Field>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="block text-xs font-bold uppercase tracking-[.07em] text-[#68776e]">
+                  Password
+                </span>
+                <button
+                  type="button"
+                  data-testid="link-forgot-password"
+                  onClick={() => navigate?.('/forgot-password')}
+                  className="text-xs font-bold text-[#246b59] hover:text-[#183f35] hover:underline dark:text-[#56ab93] dark:hover:text-[#a9dfb6]"
+                >
+                  Forgot password?
+                </button>
+              </div>
+              <div className="relative">
+                <input
+                  data-testid="input-password"
+                  type={showPassword ? "text" : "password"}
+                  {...register('password', { required: 'Password is required' })}
+                  className="input pr-10"
+                  placeholder="••••••••"
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8a948e] hover:text-[#183f35]"
+                  disabled={loading}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {formErrors.password && (
+                <div className="mt-1 text-sm text-[#a63f32]">{formErrors.password.message}</div>
+              )}
             </div>
             {error && (
               <div
